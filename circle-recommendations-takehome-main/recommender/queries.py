@@ -30,10 +30,10 @@ CANDIDATE_CIRCLES_SQL = """
              COALESCE(SUM(a.reaction_count + a.comment_count + a.save_count), 0) AS engagement_30d
     FROM circles c
     LEFT JOIN topics t ON t.id = c.topic_id
-    LEFT JOIN activity a ON a.circle_id = c.id AND a.created_at >= ?
+    LEFT JOIN activity a ON a.circle_id = c.id AND a.created_at >= :cutoff
     WHERE c.access IN ({access_placeholders})
         AND (c.max_members IS NULL OR c.member_count < c.max_members)
-        AND c.id NOT IN (SELECT circle_id FROM memberships WHERE user_id = ?)
+        AND c.id NOT IN (SELECT circle_id FROM memberships WHERE user_id = :user_id)
     GROUP BY c.id
 """
 
@@ -44,7 +44,7 @@ def get_candidate_circles(conn, user_id):
     
     tags= get_circle_tag_ids(conn)
     circles = []
-    for r in conn.execute(CANDIDATE_CIRCLES_SQL, ({"cutoff": cutoff, "user_id": user_id, **access_params})):
+    for r in conn.execute(sql, ({"cutoff": cutoff, "user_id": user_id, **access_params})):
         circle = dict(r)
         circle["tag_topic_ids"] = tags.get(circle["id"], set())
         circles.append(circle)
