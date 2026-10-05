@@ -81,6 +81,6 @@ CREATE TABLE user_topic_interests (
 );
 
 CREATE INDEX idx_circles_topic_id ON circles(topic_id);
-CREATE INDEX idx_circles_topic_id ON activity(circle_id);
+CREATE INDEX idx_activity_circle_id ON activity(circle_id);
 CREATE INDEX idx_circles_last_activity_at ON circles(last_activity_at);
 CREATE INDEX idx_memberships_circle_id ON memberships(circle_id);

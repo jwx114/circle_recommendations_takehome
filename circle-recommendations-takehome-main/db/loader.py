@@ -37,12 +37,8 @@ users_topic = resolve_users_topic(users_topic, topics_lookup)
 users_topic.to_sql("user_topic_interests", db, if_exists='append', index=False)
 
 # FK validation
-assert db.execute("PRAGMA foreign_keys_check").fetchall() == []
+assert db.execute("PRAGMA foreign_key_check").fetchall() == []
 
 db.commit()
 
 db.close()
-
-
-
-

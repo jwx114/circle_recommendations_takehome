@@ -1,2 +1,11 @@
 node_modules/
 .DS_Store
+
+# Generated: rebuild with `python db/loader.py`
+*.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
