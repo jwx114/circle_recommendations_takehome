@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from recommender.config import AS_OF_DATE, INACTIVITY_GRACE_DAYS, INACTIVITY_HALF_LIFE_DAYS, JOIN_POLICY_FIT, PRIMARY_TOPIC_MATCH, TAG_MATCH, ACTIVITY_TARGETS, WEIGHTS, WEIGHTS
+from recommender.config import AS_OF_DATE, INACTIVITY_GRACE_DAYS, INACTIVITY_HALF_LIFE_DAYS, JOIN_POLICY_FIT, PRIMARY_TOPIC_MATCH, TAG_MATCH, ACTIVITY_TARGETS, WEIGHTS
 
 def topic_score(circle, user_topic_ids):
     if circle["topic_id"] in user_topic_ids:

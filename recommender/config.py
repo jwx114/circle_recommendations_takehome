@@ -19,7 +19,7 @@ WEIGHTS = {
     "fit": 0.2
 }
 
-PRIMARY_TOPIC_MATCH = .0 # user.topic_interests == circle.topic
+PRIMARY_TOPIC_MATCH = 1.0 # user.topic_interests == circle.topic
 TAG_MATCH = 0.5 # user's topic interests appear in circle's tags BUT NOT its primary topic
 
 # Inactivity: no penalty for first GRACE days, score halves every HALF_LIFE days

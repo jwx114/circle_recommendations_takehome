@@ -71,7 +71,6 @@ CREATE TABLE users (
 );
 
 DROP TABLE IF EXISTS user_topic_interests;
-DROP TABLE IF EXISTS users_topic_interests; -- typo from loader, in case this does exist, we drop it.
 CREATE TABLE user_topic_interests (
     user_id INTEGER,
     topic_id INTEGER,
