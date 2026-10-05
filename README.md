@@ -103,7 +103,7 @@ recommender/   config.py      weights and thresholds
                scoring.py     per-Circle scores
                ranking.py     sort, per-topic limit, explanations
                __main__.py    CLI
-tests/         scenario tests
+tests/         scenario and unit tests
 ```
 
 ---

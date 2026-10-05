@@ -3,6 +3,8 @@ from recommender.config import AS_OF_DATE, DEFAULT_K, MAX_PER_TOPIC, PRIMARY_TOP
 from recommender.scoring import score_circle
 
 def recommend(user_id, k=DEFAULT_K, as_of=AS_OF_DATE):
+    if k < 1:
+        raise ValueError(f"k must be at least 1, got {k}")
     conn = queries.get_connection()
     try:
         if queries.get_user(conn, user_id) is None:
@@ -19,13 +21,13 @@ def recommend(user_id, k=DEFAULT_K, as_of=AS_OF_DATE):
 def limit_per_topic(scored, k, max_per_topic=MAX_PER_TOPIC):
     picked, per_topic = [], {}
     for item in scored:
+        if len(picked) >= k:
+            break
         topic_id = item["circle"]["topic_id"]
         if topic_id is not None and per_topic.get(topic_id, 0) >= max_per_topic:
             continue
         per_topic[topic_id] = per_topic.get(topic_id, 0) + 1
         picked.append(item)
-        if len(picked) == k:
-            break
     return picked
 
 def explain(item):

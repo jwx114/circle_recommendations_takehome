@@ -25,7 +25,7 @@
 
 **SQLite over Postgres.** At this dataset's size (~40 circles, ~100 users, ~440 memberships), engine choice has no measurable performance effect. SQLite wins purely on operational simplicity: no server for a grader to install or configure to run this locally. The real tradeoff is SQLite's single-writer model, which would become a genuine constraint under concurrent production write load (many simultaneous joins/posts): that's the first thing to change moving toward production scale.
 
-**Normalized `tags` and `topic_interests` into real join tables rather than keeping them as inline arrays.** The raw seed data stores both as JSON arrays. Denormalizing them into the schema as-is would push topic-overlap computation into application code as array intersection; normalizing into `circle_tags`/`user_topic_interests` makes topic matching a SQL join instead, which is simpler and the only approach that scales past this dataset's size.
+**Normalized `tags` and `topic_interests` into real join tables rather than keeping them as inline arrays.** The raw seed data stores both as JSON arrays. Denormalizing them into the schema as-is would push topic-overlap computation into application code as array intersection; normalizing into `circle_tags`/`user_topic_interests` makes loading a user's interests or a circle's tags a simple indexed lookup instead. The topic match itself is a set intersection in Python (see Ranking), which stays cheap because each user and circle only has a handful of topics.
 
 **`circles.topic` kept as its own scalar FK, not folded into `circle_tags`.** A circle's primary topic and its tags are semantically distinct: exactly one (or none) primary topic vs. zero-to-many tags, and the primary topic is the single most heavily queried signal in the ranking logic. A scalar column keeps that lookup a plain equality check rather than a filtered join, and gets "at most one primary topic" enforced for free by the column itself. The alternative (one unified many-to-many table with an `is_primary` flag) is more textbook-normalized, but needs a partial unique index to get the same guarantee, for no query-time benefit given how dominant this one lookup is.
 
@@ -35,9 +35,13 @@
 
 ## Indexing
 
-- The composite primary keys on all three join tables double as the index needed for their most common access pattern: "every topic for circle X," "every circle user Y belongs to."
-- `circles.last_activity_at`: worth its own index, since the ranking logic filters/penalizes on recency for every recommendation request; this is a hot-path `WHERE` column, not just bookkeeping.
-- `circles.topic_id`: same reasoning; it's the anchor of the dominant scoring signal and gets touched on essentially every request.
+`schema.sql` creates four indexes on top of the primary keys.
+
+- The composite primary keys on all three join tables double as the index for their leading column: "every topic user Y is interested in" (`user_topic_interests`) and "every circle user Y belongs to" (`memberships`), which back the user lookups and the "not already joined" filter on every request.
+- `memberships.circle_id`: the composite PK only covers lookups by `user_id`, so this index covers the other direction. It backs the per-circle leader count in the candidate query.
+- `activity.circle_id`: backs the `LEFT JOIN` that sums each circle's last-30-day engagement in the candidate query.
+- `circles.last_activity_at`: not used by the current queries. Recency is a score penalty computed in Python rather than a `WHERE` filter, so every eligible circle is loaded regardless of activity. It's kept for when recency filtering moves into SQL at larger scale (see Next steps).
+- `circles.topic_id`: not used by the current queries either. The candidate query joins `topics` through its primary key, and topic matching happens in Python. It would back topic browsing or SQL-side topic filtering.
 
 # Ranking
 
